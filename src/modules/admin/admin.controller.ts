@@ -1,18 +1,16 @@
 import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { IsIn, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Not, Repository } from 'typeorm';
 import { AdminAuthGuard } from 'src/common/auth/admin-auth.guard';
+import { Actor, CurrentActor } from 'src/common/auth/actor';
 import { VERSIONS } from 'src/common/versioning/versions';
 import { Notification, ReviewVerdict } from 'src/database/entities';
 import { SignalExtractionService } from 'src/modules/extract/signal-extraction.service';
 import { MedicationService } from 'src/modules/medical/medication.service';
 
 class ReviewDto {
-  @IsUUID()
-  reviewerId: string;
-
   @IsIn(['correct', 'corrected', 'discarded'])
   verdict: ReviewVerdict;
 
@@ -22,9 +20,6 @@ class ReviewDto {
 }
 
 class VerifyMedicationDto {
-  @IsUUID()
-  reviewerId: string;
-
   @IsString()
   @IsNotEmpty()
   drugName: string;
@@ -62,12 +57,21 @@ export class AdminController {
     };
   }
 
-  /** POST /admin/review/:signalId — 正確／修正，寫 signal_review 與 audit_log。 */
+  /**
+   * POST /admin/review/:signalId — 正確／修正，寫 signal_review 與 audit_log。
+   *
+   * reviewerId 取自登入身分，不接受 body 傳入 ——
+   * 可由呼叫端宣稱的稽核紀錄等於沒有稽核。
+   */
   @Post('review/:signalId')
-  async review(@Param('signalId') signalId: string, @Body() dto: ReviewDto) {
+  async review(
+    @CurrentActor() actor: Actor,
+    @Param('signalId') signalId: string,
+    @Body() dto: ReviewDto,
+  ) {
     return this.extraction.review({
       signalId,
-      reviewerId: dto.reviewerId,
+      reviewerId: actor.id,
       verdict: dto.verdict,
       correctedValue: dto.correctedValue,
     });
@@ -75,10 +79,14 @@ export class AdminController {
 
   /** 藥品人工確認佇列 —— 未確認前不得建立用藥提醒（交接規格 §6）。 */
   @Post('medications/:itemId/verify')
-  async verifyMedication(@Param('itemId') itemId: string, @Body() dto: VerifyMedicationDto) {
+  async verifyMedication(
+    @CurrentActor() actor: Actor,
+    @Param('itemId') itemId: string,
+    @Body() dto: VerifyMedicationDto,
+  ) {
     return this.medication.verify({
       itemId,
-      reviewerId: dto.reviewerId,
+      reviewerId: actor.id,
       drugName: dto.drugName,
       dosage: dto.dosage,
     });

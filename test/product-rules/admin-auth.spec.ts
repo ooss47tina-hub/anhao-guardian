@@ -99,6 +99,44 @@ describe('產品原則：營運後台認證', () => {
 
     expect(unprotected.sort()).toEqual(allowed.sort());
   });
+
+  describe('審查者身分不可由呼叫端宣稱', () => {
+    it('reviewerId 取自登入身分，body 帶的值無效', async () => {
+      const extraction = { review: jest.fn(async () => ({ id: 'review-1' })) };
+      const medication = { verify: jest.fn(async () => ({ id: 'item-1' })) };
+      const notifications = { count: jest.fn(async () => 0) };
+      const config = { get: jest.fn(() => 0.7) };
+
+      const controller = new AdminController(
+        extraction as never,
+        medication as never,
+        notifications as never,
+        config as never,
+      );
+
+      const actor = { role: 'admin' as const, id: OPERATOR_ACTOR_ID, lineUserId: null };
+
+      await controller.review(actor, 'signal-1', {
+        verdict: 'correct',
+        // 刻意多塞一個欄位，模擬呼叫端試圖冒名。
+        reviewerId: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+      } as never);
+
+      expect(extraction.review).toHaveBeenCalledWith(
+        expect.objectContaining({ reviewerId: OPERATOR_ACTOR_ID }),
+      );
+
+      await controller.verifyMedication(actor, 'item-1', {
+        drugName: '降血壓藥',
+        dosage: '每日一次',
+        reviewerId: 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+      } as never);
+
+      expect(medication.verify).toHaveBeenCalledWith(
+        expect.objectContaining({ reviewerId: OPERATOR_ACTOR_ID }),
+      );
+    });
+  });
 });
 
 describe('adminTokenMatches', () => {
