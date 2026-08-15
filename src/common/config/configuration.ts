@@ -37,6 +37,15 @@ export const configuration = () => ({
     kmsKeyId: process.env.CRYPTO_KMS_KEY_ID ?? '',
   },
 
+  /**
+   * 營運後台。
+   * 未設定時 AdminAuthGuard 一律拒絕 —— 空字串不等於「不用驗證」。
+   * 單一共用 token；需要多帳號時應改接正式 IdP，不要自建使用者表。
+   */
+  admin: {
+    token: process.env.ADMIN_TOKEN ?? '',
+  },
+
   line: {
     channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN ?? '',
     channelSecret: process.env.LINE_CHANNEL_SECRET ?? '',

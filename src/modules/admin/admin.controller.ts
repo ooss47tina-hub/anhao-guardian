@@ -1,8 +1,9 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IsIn, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Not, Repository } from 'typeorm';
+import { AdminAuthGuard } from 'src/common/auth/admin-auth.guard';
 import { VERSIONS } from 'src/common/versioning/versions';
 import { Notification, ReviewVerdict } from 'src/database/entities';
 import { SignalExtractionService } from 'src/modules/extract/signal-extraction.service';
@@ -37,10 +38,11 @@ class VerifyMedicationDto {
  * 營運 / AI Review Console（交接規格 §3、SRS 第 5 節）。
  * 不含派單與拆帳。
  *
- * TODO(auth)：這些端點目前沒有獨立的 admin 認證。
- * 正式部署前必須加上 RBAC（SRS 3.3 資安），否則低信心訊號與人工修正介面會全網公開。
+ * guard 掛在類別層而非逐個端點 —— 少掛一個端點不會有任何錯誤訊息，
+ * 只會安靜地開一個洞。頁面與登入放在 AdminConsoleController。
  */
 @Controller('admin')
+@UseGuards(AdminAuthGuard)
 export class AdminController {
   constructor(
     private readonly extraction: SignalExtractionService,
