@@ -8,6 +8,7 @@ import { configuration } from './common/config/configuration';
 import { ALL_ENTITIES } from './database/entities';
 import { AdminModule } from './modules/admin/admin.module';
 import { ConsentModule } from './modules/consent/consent.module';
+import { DevModule } from './modules/dev/dev.module';
 import { ElderModule } from './modules/elder/elder.module';
 import { GuardianModule } from './modules/guardian/guardian.module';
 import { IngestModule } from './modules/ingest/ingest.module';
@@ -42,6 +43,9 @@ import { SchedulerModule } from './scheduler/scheduler.module';
     ConsentModule,
     AdminModule,
     SchedulerModule,
+
+    // 開發檢視頁（/dev）。正式環境不載入；DevController 內另有 404 雙保險。
+    ...(process.env.NODE_ENV === 'production' ? [] : [DevModule]),
   ],
 })
 export class AppModule {}
