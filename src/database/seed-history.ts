@@ -12,6 +12,7 @@ import { applyScenario, Scenario, SCENARIOS } from './seed-history.lib';
  *   npm run seed:history                    # 預設 worth_attention 情境
  *   npm run seed:history -- stable
  *   npm run seed:history -- insufficient
+ *   npm run seed:history -- worth_attention U1234abcd...   # 指定長者（LINE user id）
  *
  * 這是開發驗收工具，不是測試資料產生器 —— 它刻意產生「剛好會觸發某個結果」的
  * 資料，方便對照介面原型驗收。要驗證判斷邏輯本身請看 test/product-rules/。
@@ -20,9 +21,10 @@ import { applyScenario, Scenario, SCENARIOS } from './seed-history.lib';
 async function main(): Promise<void> {
   const logger = new Logger('seed:history');
   const scenario = (process.argv[2] ?? 'worth_attention') as Scenario;
+  const lineUserId = process.argv[3] ?? 'U-dev-elder-meiling';
 
   if (!SCENARIOS.includes(scenario)) {
-    logger.error(`用法：npm run seed:history -- <${SCENARIOS.join('|')}>`);
+    logger.error(`用法：npm run seed:history -- <${SCENARIOS.join('|')}> [長者 LINE user id]`);
     process.exit(1);
   }
 
@@ -30,12 +32,10 @@ async function main(): Promise<void> {
 
   try {
     const dataSource = app.get(DataSource);
-    const elder = await dataSource.getRepository(Elder).findOne({
-      where: { lineUserId: 'U-dev-elder-meiling' },
-    });
+    const elder = await dataSource.getRepository(Elder).findOne({ where: { lineUserId } });
 
     if (!elder) {
-      logger.error('找不到示範長者。請先執行 npm run seed。');
+      logger.error(`找不到長者（lineUserId=${lineUserId}）。示範長者請先執行 npm run seed。`);
       process.exit(1);
     }
 

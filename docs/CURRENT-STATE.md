@@ -64,14 +64,24 @@ cd ~/Projects/anhao-guardian && npm run line:tunnel   # ngrok
 ## 常用指令
 
 ```bash
-npm test                              # 110 個測試，不需資料庫
+npm test                              # 119 個測試，不需資料庫
 npm run seed                          # 示範長者陳美玲 + 守護者陳怡君
 npm run seed:history                  # 灌 28 天訊號（worth_attention 情境）
 npm run seed:history -- stable        # 或 stable / insufficient
+npm run seed:history -- worth_attention U1234...   # 可指定長者（LINE user id）
+npm run demo:elder -- <長者LINE id> [守護者LINE id]  # 把真實 LINE 帳號變成故事示範長者
 npm run job -- baseline_rebuild       # 手動觸發排程
 npm run job -- pattern_detect
 npm run job -- digest_build 2026-08-17T09:00:00   # 可指定「假裝現在是」
 ```
+
+**2026-08-15 demo 設定**：Tina 的真實 LINE 帳號已轉成示範長者「王伯伯」
+（74 歲獨居，媳婦視角，worth_attention 情境，P2 已觸發並真推播）。
+守護者網頁改用假 id 登入（`web/.env.local` 的
+`NEXT_PUBLIC_DEV_TOKEN=id-token:U-demo-guardian-web`）——
+因為 LineAuthGuard 先查 elder 表，真實帳號的 token 永遠是長者身分。
+LINE 通知推播給主要守護者（目前指到 Tina 自己的 line id；換家人手機時
+重跑 `demo:elder` 帶第二個參數）。
 
 示範身分的 token（FakeLineAdapter 格式，開發環境專用）：
 
