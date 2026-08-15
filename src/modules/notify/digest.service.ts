@@ -6,6 +6,7 @@ import { DiagnosticLanguageFilter } from 'src/common/safety/diagnostic-language.
 import {
   Guardian,
   GuardianLink,
+  LifeSignal,
   MedicalJourney,
   Notification,
   WeeklyDigest,
@@ -28,6 +29,7 @@ export class DigestService {
     @InjectRepository(GuardianLink) private readonly links: Repository<GuardianLink>,
     @InjectRepository(Guardian) private readonly guardians: Repository<Guardian>,
     @InjectRepository(MedicalJourney) private readonly journeys: Repository<MedicalJourney>,
+    @InjectRepository(LifeSignal) private readonly signals: Repository<LifeSignal>,
     @InjectRepository(Notification) private readonly notifications: Repository<Notification>,
     private readonly baseline: BaselineService,
     private readonly consent: ConsentService,
@@ -40,10 +42,30 @@ export class DigestService {
     const snapshots = await this.baseline.latestSnapshot(elderId);
     const gate = await this.baseline.gate(elderId, weekStart);
 
+    // 摘要週：weekStart（週一）往前推七天，即剛結束的那一週。
+    const weekFrom = new Date(weekStart);
+    weekFrom.setDate(weekFrom.getDate() - 7);
+
+    const rows: Array<{ dimension: SignalDimension; count: string }> = await this.signals
+      .createQueryBuilder('s')
+      .select('s.dimension', 'dimension')
+      .addSelect('COUNT(*)', 'count')
+      .where('s.elder_id = :elderId', { elderId })
+      .andWhere('s.occurred_on >= :from', { from: weekFrom.toISOString().slice(0, 10) })
+      .andWhere('s.occurred_on < :to', { to: weekStart.toISOString().slice(0, 10) })
+      .andWhere('s.dimension IN (:...dims)', { dims: BASELINE_DIMENSIONS })
+      .groupBy('s.dimension')
+      .getRawMany();
+
+    const recentByDimension = new Map(rows.map((r) => [r.dimension, Number.parseInt(r.count, 10)]));
+
     const dimensionSummary = BASELINE_DIMENSIONS.map((dimension: SignalDimension) => {
       const snapshot = snapshots.find((s) => s.dimension === dimension);
-      const baselineWeekly = snapshot ? Number((snapshot.mean * 7).toFixed(1)) : 0;
-      return { dimension, recent: baselineWeekly, baseline: baselineWeekly };
+      return {
+        dimension,
+        recent: recentByDimension.get(dimension) ?? 0,
+        baseline: snapshot ? Number((snapshot.mean * 7).toFixed(1)) : 0,
+      };
     });
 
     const upcoming = await this.journeys
@@ -55,7 +77,11 @@ export class DigestService {
       .getMany();
 
     // 資料不足時不得輸出「跟平常不一樣」的判斷（交接規格 §6）。
-    const stable = !gate.canDetect || dimensionSummary.every((d) => d.recent >= d.baseline);
+    // 偏離門檻與 Pattern Engine 一致（低於平常一半才算變化），
+    // 避免正常波動讓「全週穩定」的極短摘要永遠出不來。
+    const stable =
+      !gate.canDetect ||
+      dimensionSummary.every((d) => d.baseline < 0.1 || d.recent > d.baseline * 0.5);
 
     const composed = await this.llm.composeDigest({
       dimensionSummary,

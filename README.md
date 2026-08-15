@@ -31,6 +31,22 @@ npm test
 npm run job -- baseline_rebuild
 ```
 
+要看 Baseline → Pattern → 通知整條鏈路，先灌 28 天模擬訊號再跑排程：
+
+```bash
+npm run seed:history               # 近一週外出與社交驟減 → P2 通知
+npm run seed:history -- stable     # 全週如常 → 不產生 alert
+npm run seed:history -- insufficient  # 有效生活日 20 天 → 只寫內部記錄，不通知
+npm run job -- baseline_rebuild
+npm run job -- pattern_detect
+```
+
+job 可帶第二個參數假裝「現在」是某個時間，例如避開安靜時段、或在週一產摘要：
+
+```bash
+npm run job -- digest_build 2026-08-17T09:00:00
+```
+
 可用的作業名稱：`activity_sync`、`health_record_sync`、`baseline_rebuild`、
 `pattern_detect`、`digest_build`、`eligibility_check`、`partition_maintenance`。
 

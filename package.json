@@ -17,6 +17,7 @@
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/database/data-source.ts",
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/database/data-source.ts",
     "seed": "ts-node -r tsconfig-paths/register src/database/seed.ts",
+    "seed:history": "ts-node -r tsconfig-paths/register src/database/seed-history.ts",
     "job": "ts-node -r tsconfig-paths/register src/scheduler/job-cli.ts"
   },
   "dependencies": {

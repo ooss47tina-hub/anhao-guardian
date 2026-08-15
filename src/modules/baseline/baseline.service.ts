@@ -55,7 +55,11 @@ export class BaselineService {
       .where('s.elder_id = :elderId', { elderId })
       .andWhere('s.occurred_on >= :from', { from })
       .andWhere('s.occurred_on <= :to', { to: this.toDateString(asOf) })
-      .andWhere("s.review_state <> 'reviewed' OR s.review_state = 'reviewed'")
+      // 被人工判定為錯誤的訊號不算有效生活日，與 computeDimensions 的過濾一致。
+      .andWhere(
+        `NOT EXISTS (SELECT 1 FROM signal_review r
+           WHERE r.signal_id = s.id AND r.verdict = 'discarded')`,
+      )
       .getRawMany();
     return Number.parseInt(rows[0]?.count ?? '0', 10);
   }
