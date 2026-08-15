@@ -151,6 +151,10 @@ SRS F2-01 寫「至少 21 天**且**至少 12 個有效生活日」。
 
 ## 接手前必讀
 
+- [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md) — **現況與下一步**。新對話接手先讀這份
+
+## 其他文件
+
 - [`docs/HANDOFF.md`](docs/HANDOFF.md) — 規格條文與程式位置的逐項對照
 - [`src/adapters/real/README.md`](src/adapters/real/README.md) — 正式外部串接的做法與地雷
 - [`docs/superpowers/specs/2026-08-15-anhao-guardian-backend-design.md`](docs/superpowers/specs/2026-08-15-anhao-guardian-backend-design.md) — 設計決策與取捨
