@@ -7,8 +7,8 @@
 
 | Port | 建議檔名 | 串接重點 |
 |---|---|---|
-| `LinePort` | `line.adapter.ts` | Webhook 簽章驗證（HMAC-SHA256 + Channel Secret）；`fetchContent` 走 `api-data.line.me`；push 需處理 429 重試 |
-| `LlmPort` | `llm.adapter.ts` | Function calling 輸出結構化 signal；每次呼叫回傳的 `modelVersion` / `promptVersion` 必須真實反映當次設定，不可寫死 |
+| `LinePort` | ✅ `line.adapter.ts` | Webhook 簽章驗證（HMAC-SHA256 + Channel Secret）；`fetchContent` 走 `api-data.line.me`；push 需處理 429 重試 |
+| `LlmPort` | ✅ `openai-llm.adapter.ts` | 已實作（OpenAI）。structured outputs（json_schema + strict）+ 本地驗證層。prompt 在 `openai-llm.prompts.ts`，改動須進 `prompt_version` |
 | `SttPort` | `stt.adapter.ts` | zh-TW；台語列 Phase 1.5（SRS 3.2）。信心值必須是真實信心，不可回傳常數 |
 | `OcrPort` | `ocr.adapter.ts` | 藥品欄位一律 `needsHumanReview: true`，型別已強制 |
 | `MyHealthBankPort` | `my-health-bank.adapter.ts` | OAuth 2.0 + FHIR R4。**原始 JSON 不落地**：解析後只留必要欄位再丟棄回應 |

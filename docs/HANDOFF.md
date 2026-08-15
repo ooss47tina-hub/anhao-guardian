@@ -14,7 +14,7 @@
 | 階段 | 位置 | 狀態 |
 |---|---|---|
 | Ingest | `src/modules/ingest/` | 骨架（LINE 為 Fake，佇列為記憶體內） |
-| Extract | `src/modules/extract/signal-extraction.service.ts` | 骨架（LLM 為規則式 Fake） |
+| Extract | `src/modules/extract/signal-extraction.service.ts` | 已實作（OpenAI structured outputs；未設 LLM_API_KEY 時退回規則式 Fake） |
 | Baseline | `src/modules/baseline/baseline.service.ts` | 已實作 |
 | Detect | `src/modules/detect/pattern-engine.service.ts` | 已實作 |
 | Notify | `src/modules/notify/` | 已實作 |

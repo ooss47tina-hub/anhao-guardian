@@ -47,7 +47,14 @@ export const configuration = () => ({
     autoRegisterElder: process.env.LINE_AUTO_REGISTER_ELDER === 'true',
   },
 
-  llm: { provider: provider(process.env.LLM_PROVIDER), model: process.env.LLM_MODEL ?? '' },
+  llm: {
+    /** 填了 LLM_API_KEY 就走真串接（OpenAI），否則 fake。 */
+    provider: provider(process.env.LLM_API_KEY ? 'real' : undefined),
+    apiKey: process.env.LLM_API_KEY ?? '',
+    model: process.env.LLM_MODEL ?? '',
+    /** 相容 OpenAI API 的自架或代理端點；留空走官方。 */
+    baseUrl: process.env.LLM_BASE_URL ?? '',
+  },
   stt: { provider: provider(process.env.STT_PROVIDER) },
   ocr: { provider: provider(process.env.OCR_PROVIDER) },
 
