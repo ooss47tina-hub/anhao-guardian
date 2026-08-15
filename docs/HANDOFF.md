@@ -47,6 +47,7 @@ entity 依規格章節分四個檔案，方便逐節比對：
 
 - **append-only**：`consent`、`audit_log` 由 `reject_mutation()` trigger 擋 UPDATE/DELETE。
   撤銷授權走 `revoke_consent()` 函式插入新列。
+  唯一例外是長者行使刪除權 —— 見 `EraseException` migration，只放行 DELETE 且需交易內旗標。
 - **每位長者僅一位 is_primary**：部分唯一索引 `guardian_link_one_primary_idx`
   （條件 `is_primary AND revoked_at IS NULL`），解除綁定後可指派新的主要守護者。
 - **加密欄位**：`message.text_encrypted`、`gov_health_record.payload_encrypted`
@@ -111,7 +112,7 @@ INSERT 直接失敗，屬必要維運作業。
 | 原則 | 為何沒有測試 |
 |---|---|
 | 無即時定位、無全程行程追蹤 | 這是「沒有某個東西」的性質 —— schema 裡沒有 location 欄位，程式碼裡沒有定位 API。測試無法有意義地斷言不存在的東西；靠 code review 守。 |
-| 可匯出與刪除 | `PrivacyService` 需要真實 DB 才能驗證級聯刪除確實清空。待有測試資料庫後補整合測試。 |
+| 可匯出與刪除 | 已用 psql 實測級聯刪除（見文末），但尚未寫成自動化測試 —— 需要測試資料庫。 |
 | North Star 指標 | 同上，需要真實資料。 |
 
 ## §7 建議技術選型
@@ -145,4 +146,20 @@ INSERT 直接失敗，屬必要維運作業。
 | KMS 未實作 | `adapters/crypto/kms-crypto.adapter.ts` TODO(infra) | 正式環境無法啟動（刻意設計） |
 | LIFF JWT 未換發 | `common/auth/line-auth.guard.ts` TODO(auth) | 每次請求都打 LINE 驗證端點 |
 | 活動距離過濾 | `publicdata/public-health.service.ts` TODO(product) | 目前只依 region_code 過濾。1.5 公里過濾需要長者位置，取得方式待產品決定 |
-| 整合測試 | — | 目前全為單元測試。需要測試資料庫才能驗證 migration、trigger、級聯刪除 |
+| 整合測試 | — | 目前全為單元測試。migration、trigger、級聯刪除已用 psql 手動驗證過（見下），但尚未自動化 |
+
+## 已用真實資料庫驗證過的行為
+
+2026-08-15 以 Postgres 16 實測，結果如下：
+
+- 四個 migration 依序執行成功，建出 42 個 relation（21 張表 + 分區與預設分區）
+- `message` / `life_signal` / `baseline_snapshot` 各有 6 個月分區 + 1 個 default 分區
+- 無 `app.erase_mode` 旗標時，`consent` 與 `audit_log` 的 UPDATE 與 DELETE 均被 trigger 拒絕
+- 有旗標時，UPDATE **仍**被拒絕（只放行 DELETE），旗標不外洩到新連線
+- `revoke_consent()` 正確插入 granted=false 的新列，未改動原列
+- 刪除長者時 `consent` 隨之級聯清空，`audit_log` 保留
+- 端到端：長者對話 → 訊號萃取 → 寫入 `life_signal`；高風險語句 → 即時通知守護者 → 寫 `audit_log`
+- 守護者首頁在有效生活日 0 天時回「資料不足」，未輸出任何變化判斷
+- 守護者代長者授權 `raw_chat_share` 回 403
+- 長者呼叫守護者端點回 403
+- STT 信心 0.42 時回 `needsRetry: true`，不進 LLM、不產生訊號

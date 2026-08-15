@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { IsIn, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Not, Repository } from 'typeorm';
 import { VERSIONS } from 'src/common/versioning/versions';
@@ -8,14 +9,27 @@ import { SignalExtractionService } from 'src/modules/extract/signal-extraction.s
 import { MedicationService } from 'src/modules/medical/medication.service';
 
 class ReviewDto {
+  @IsUUID()
   reviewerId: string;
+
+  @IsIn(['correct', 'corrected', 'discarded'])
   verdict: ReviewVerdict;
+
+  @IsOptional()
+  @IsString()
   correctedValue?: string;
 }
 
 class VerifyMedicationDto {
+  @IsUUID()
   reviewerId: string;
+
+  @IsString()
+  @IsNotEmpty()
   drugName: string;
+
+  @IsString()
+  @IsNotEmpty()
   dosage: string;
 }
 

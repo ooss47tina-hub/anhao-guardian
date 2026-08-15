@@ -79,11 +79,14 @@ export class MessageRepository {
     return Promise.all(rows.map((row) => this.decrypt(row)));
   }
 
-  /** 刪除權。硬刪，不保留可還原副本（交接規格 §6）。 */
-  async hardDeleteForElder(elderId: string): Promise<number> {
-    const result = await this.repo.delete({ elderId });
-    return result.affected ?? 0;
-  }
+  /**
+   * 刪除訊息不在這裡。
+   *
+   * 長者行使刪除權時，message 必須與 consent、life_signal 等一起刪，
+   * 且要在同一個設有 app.erase_mode 旗標的交易內 —— 見 PrivacyService.confirmErase。
+   * 在這裡另開一條刪除路徑，會讓人以為刪訊息可以獨立進行，
+   * 結果是 elder 還在、訊息卻沒了，或反過來。
+   */
 
   private async decrypt(row: Message): Promise<DecryptedMessage> {
     return {

@@ -9,6 +9,7 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
+import { IsNotEmpty, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
 import { Actor, CurrentActor } from 'src/common/auth/actor';
 import { LineAuthGuard } from 'src/common/auth/line-auth.guard';
 import { STT_PORT, SttPort } from 'src/ports/stt.port';
@@ -20,26 +21,48 @@ import { PrivacyService } from 'src/modules/privacy/privacy.service';
 import { PublicHealthService } from 'src/modules/publicdata/public-health.service';
 import { LinkService } from 'src/modules/identity/link.service';
 
+/**
+ * DTO 的每個欄位都必須有 class-validator 裝飾器。
+ * main.ts 的 ValidationPipe 設了 whitelist: true —— 沒有裝飾器的欄位會被整個剝掉，
+ * controller 收到的會是空物件，而且不會報錯，只會在後面某處炸成 500。
+ */
 class ChatTurnDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(2000)
   utterance: string;
 }
 
 class PersonaPatchDto {
+  @IsObject()
   changes: Partial<Record<PersonaEditableField, string>>;
 }
 
 class SttDto {
+  @IsString()
+  @IsNotEmpty()
   audioRef: string;
+
+  @IsString()
+  @IsNotEmpty()
   mimeType: string;
 }
 
 class InviteAcceptDto {
+  @IsString()
+  @IsNotEmpty()
   code: string;
+
+  @IsString()
+  @IsNotEmpty()
   relation: string;
 }
 
 class EraseConfirmDto {
-  confirmationToken: string;
+  /** 缺此欄位代表「要求刪除」，帶了才是「確認刪除」（交接規格 §3 二次確認）。 */
+  @IsOptional()
+  @IsString()
+  confirmationToken?: string;
 }
 
 /**

@@ -1,13 +1,20 @@
 import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { IsBoolean, IsIn, IsNotEmpty, IsString } from 'class-validator';
 import { Actor, CurrentActor } from 'src/common/auth/actor';
 import { LineAuthGuard } from 'src/common/auth/line-auth.guard';
 import { ConsentService } from 'src/common/consent/consent.service';
 import { ConsentScope } from 'src/database/entities';
 
 class ConsentDto {
+  @IsIn(['core', 'medical', 'pattern_share', 'voice_retention', 'mood_share', 'raw_chat_share'])
   scope: ConsentScope;
+
+  @IsBoolean()
   granted: boolean;
+
   /** LINE 訊息 id 或 LIFF 事件 id，作為同意證據。 */
+  @IsString()
+  @IsNotEmpty()
   evidenceRef: string;
 }
 

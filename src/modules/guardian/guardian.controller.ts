@@ -1,4 +1,5 @@
 import { Body, Controller, ForbiddenException, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { IsIn, IsOptional } from 'class-validator';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Actor, CurrentActor } from 'src/common/auth/actor';
@@ -8,7 +9,11 @@ import { AckAction, AckFeedback, AlertAck } from 'src/database/entities';
 import { GuardianViewService } from './guardian-view.service';
 
 class AckAlertDto {
+  @IsIn(['contacted', 'inaccurate', 'mute_this_type'])
   action: AckAction;
+
+  @IsOptional()
+  @IsIn(['helpful', 'inaccurate', 'mute_this_type'])
   feedback?: AckFeedback;
 }
 

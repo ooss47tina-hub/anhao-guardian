@@ -105,13 +105,26 @@ export class PrivacyService {
     });
 
     const removedObjects = await this.storage.deleteByPrefix(`elder/${input.elderId}/`);
-    await this.messages.hardDeleteForElder(input.elderId);
 
-    // 其餘資料表以 ON DELETE CASCADE 連動刪除。
-    // life_signal 與 baseline_snapshot 是分區表、無 FK，需明確刪除。
     await this.dataSource.transaction(async (manager) => {
+      /**
+       * 解除 consent 的 append-only 保護。
+       *
+       * consent 有指向 elder 的外鍵，級聯刪除會觸發 reject_mutation()。
+       * 沒有這行，DELETE FROM elder 會失敗，刪除權形同虛設。
+       *
+       * set_config 第三個參數為 true = 交易內有效，交易結束即失效，
+       * 不會外洩到連線池的其他使用者。且 trigger 只放行 DELETE，
+       * UPDATE 在任何情況下都仍被擋。
+       */
+      await manager.query("SELECT set_config('app.erase_mode', 'on', true)");
+
+      // message、life_signal、baseline_snapshot 是分區表、無 FK，需明確刪除。
+      await manager.query('DELETE FROM message WHERE elder_id = $1', [input.elderId]);
       await manager.query('DELETE FROM life_signal WHERE elder_id = $1', [input.elderId]);
       await manager.query('DELETE FROM baseline_snapshot WHERE elder_id = $1', [input.elderId]);
+
+      // 其餘資料表以 ON DELETE CASCADE 連動刪除（含 consent）。
       await manager.query('DELETE FROM elder WHERE id = $1', [input.elderId]);
     });
 

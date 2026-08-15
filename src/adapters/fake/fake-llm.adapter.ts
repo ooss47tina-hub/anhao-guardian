@@ -33,7 +33,7 @@ const MATCHERS: Matcher[] = [
   { dimension: 'outing', keywords: ['去市場', '出門', '散步', '公園', '買菜'], value: 'went_out', confidence: 0.91 },
   { dimension: 'meal', keywords: ['吃飯', '早餐', '午餐', '晚餐', '煮'], value: 'ate', confidence: 0.86 },
   { dimension: 'meal', keywords: ['沒胃口', '吃不下'], value: 'poor_appetite', confidence: 0.82 },
-  { dimension: 'sleep_subjective', keywords: ['睡不好', '睡不著', '失眠', '很累'], value: 'poor_sleep', confidence: 0.88 },
+  { dimension: 'sleep_subjective', keywords: ['睡不好', '睡不太好', '睡不著', '沒睡好', '失眠', '很累'], value: 'poor_sleep', confidence: 0.88 },
   { dimension: 'social', keywords: ['朋友', '鄰居', '秀琴', '聊天', '一起'], value: 'met_someone', confidence: 0.84 },
   { dimension: 'mood', keywords: ['開心', '高興', '不錯'], value: 'positive', confidence: 0.79 },
   { dimension: 'mood', keywords: ['煩', '難過', '無聊'], value: 'negative', confidence: 0.78 },
