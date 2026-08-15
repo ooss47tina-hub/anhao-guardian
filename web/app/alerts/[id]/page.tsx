@@ -3,6 +3,7 @@
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { api, AlertDetail } from '@/lib/api';
+import { useElder } from '@/components/Shell';
 
 /**
  * G-03 變化詳情。
@@ -11,6 +12,7 @@ import { api, AlertDetail } from '@/lib/api';
  */
 export default function AlertPage() {
   const { id } = useParams<{ id: string }>();
+  const { me } = useElder();
   const [alert, setAlert] = useState<AlertDetail | null>(null);
   const [acked, setAcked] = useState<string | null>(null);
 
@@ -99,7 +101,10 @@ export default function AlertPage() {
           </div>
         ) : (
           <div className="btn-row">
-            <button onClick={() => ack('contacted')}>我已聯絡媽媽</button>
+            {/* 用長者稱呼組按鈕文字 —— 原型寫死「媽媽」，換示範長者就穿幫。 */}
+            <button onClick={() => ack('contacted')}>
+              我已聯絡{me?.elders[0]?.displayName.slice(1) ?? '家人'}
+            </button>
             <button className="btn-quiet" onClick={() => ack('inaccurate')}>
               這次判斷不準
             </button>

@@ -58,7 +58,9 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               <div className="elder-meta">
                 {elder
                   ? [
-                      elder.relation === '女兒' ? '媽媽' : elder.relation,
+                      // 側欄顯示「這位長者是我的＿＿」：由守護者的 relation 反推。
+                      ({ 女兒: '媽媽', 媳婦: '公公' } as Record<string, string>)[elder.relation] ??
+                        elder.relation,
                       age ? `${age} 歲` : null,
                       elder.livingAlone ? '獨居' : null,
                     ]

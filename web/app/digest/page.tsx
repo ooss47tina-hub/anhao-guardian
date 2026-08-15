@@ -41,8 +41,13 @@ export default function DigestPage() {
     );
   }
 
+  // 摘要統計的是「剛結束的那一週」：[weekStart-7, weekStart)，
+  // 與 DigestService.build 的查詢視窗一致。原本顯示 weekStart 起算的
+  // 未來一週，會跟首頁「最近 7 天」的數字互相矛盾。
+  const weekFrom = new Date(digest.weekStart);
+  weekFrom.setDate(weekFrom.getDate() - 7);
   const weekEnd = new Date(digest.weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 6);
+  weekEnd.setDate(weekEnd.getDate() - 1);
   const fmt = (d: Date | string) =>
     new Date(d).toLocaleDateString('zh-TW', { month: 'numeric', day: 'numeric' });
   const max = Math.max(...digest.dimensionSummary.map((x) => Math.max(x.recent, x.baseline)), 1);
@@ -57,7 +62,7 @@ export default function DigestPage() {
   return (
     <>
       <h1 className="page-title">
-        {fmt(digest.weekStart)} – {fmt(weekEnd)}　本週摘要
+        {fmt(weekFrom)} – {fmt(weekEnd)}　週摘要
       </h1>
       <div className="page-sub">每週一 09:00 產生，內容不含聊天原文</div>
 
@@ -81,7 +86,7 @@ export default function DigestPage() {
           </div>
         ))}
         <div className="muted" style={{ marginTop: 6 }}>
-          深色為本週，淺色為個人平常水準（近 28 天 Baseline）。
+          深色為該週，淺色為個人平常水準（近 28 天 Baseline）。
         </div>
 
         {latestAlert && (
