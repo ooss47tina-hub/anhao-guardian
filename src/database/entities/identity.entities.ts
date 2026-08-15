@@ -31,9 +31,12 @@ export class Elder {
   /**
    * 只存出生年，不存完整生日。
    * 交接規格 §2.1：「不存完整身分證號；健保卡認證只留 token 與到期日」。
+   *
+   * 未經 E-00 精靈確認前為 null。不得以假值填充 ——
+   * 假的出生年會被當成真的拿去判斷健檢資格等年齡相關規則。
    */
-  @Column({ name: 'birth_year', type: 'int' })
-  birthYear: number;
+  @Column({ name: 'birth_year', type: 'int', nullable: true })
+  birthYear: number | null;
 
   @Column({ name: 'living_alone', type: 'boolean', default: false })
   livingAlone: boolean;

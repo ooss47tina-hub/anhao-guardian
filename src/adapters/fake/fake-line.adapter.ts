@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { LineInboundEvent, LinePort, LinePushMessage } from 'src/ports/line.port';
+import { LineInboundEvent, LinePort, LineProfile, LinePushMessage } from 'src/ports/line.port';
 
 /**
  * 假 LINE。推播寫入記憶體，測試可據此斷言「該通知的有通知、不該通知的沒通知」。
@@ -46,6 +46,10 @@ export class FakeLineAdapter implements LinePort {
     const [, lineUserId] = idToken.split(':');
     if (!lineUserId) throw new Error('無效的 id_token');
     return { lineUserId };
+  }
+
+  async getProfile(lineUserId: string): Promise<LineProfile> {
+    return { lineUserId, displayName: `測試使用者-${lineUserId.slice(-4)}` };
   }
 
   reset(): void {

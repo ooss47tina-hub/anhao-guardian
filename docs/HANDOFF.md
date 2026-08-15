@@ -145,6 +145,7 @@ INSERT 直接失敗，屬必要維運作業。
 | 佇列為記憶體內 | `ingest/ingest.queue.ts` TODO(infra) | 重啟掉訊息；不可多副本 |
 | KMS 未實作 | `adapters/crypto/kms-crypto.adapter.ts` TODO(infra) | 正式環境無法啟動（刻意設計） |
 | LIFF JWT 未換發 | `common/auth/line-auth.guard.ts` TODO(auth) | 每次請求都打 LINE 驗證端點 |
+| E-00 設定精靈未實作 | `ingest.processor.ts` autoRegister | 目前直接拿 LINE 顯示名稱當稱呼。LINE 名稱常是暱稱或英文名（實測拿到「Tina 王文利」），AI 叫起來不自然。SRS F0-01 要求精靈第三步詢問稱呼，並提供媽媽／王阿姨／本名等選項 |
 | 活動距離過濾 | `publicdata/public-health.service.ts` TODO(product) | 目前只依 region_code 過濾。1.5 公里過濾需要長者位置，取得方式待產品決定 |
 | 整合測試 | — | 目前全為單元測試。migration、trigger、級聯刪除已用 psql 手動驗證過（見下），但尚未自動化 |
 | 日期以 UTC 為界 | 各 service 的 `toISOString().slice(0,10)` | occurred_on / computed_on / week_start 的日界是 UTC，比台北時間早 8 小時（例如週摘要的 week_start 會顯示週日日期）。目前全系統一致所以邏輯正確，但正式上線前應統一改為 Asia/Taipei 日界 |

@@ -1,4 +1,5 @@
 import { CanActivate, ExecutionContext, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Elder, Guardian } from 'src/database/entities';
@@ -24,6 +25,7 @@ export class LineAuthGuard implements CanActivate {
     @InjectRepository(Elder) private readonly elders: Repository<Elder>,
     @InjectRepository(Guardian) private readonly guardians: Repository<Guardian>,
     @Inject(LINE_PORT) private readonly line: LinePort,
+    private readonly config: ConfigService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -34,7 +36,27 @@ export class LineAuthGuard implements CanActivate {
       throw new UnauthorizedException('缺少 LINE id_token');
     }
 
-    const { lineUserId } = await this.line.verifyIdToken(header.slice('Bearer '.length));
+    const raw = header.slice('Bearer '.length);
+
+    /**
+     * 開發用直通 token。
+     *
+     * 接上真 LINE 之後，LinePort.verifyIdToken 會真的去打 LINE 的驗證端點，
+     * 於是 /dev 檢視頁與守護者端網頁用的示範 token 全部失效 —— 但那兩個
+     * 介面正是用來驗收的。這裡在非 production 環境放行 "id-token:<lineUserId>"
+     * 格式，讓開發工具在真串接下仍能運作。
+     *
+     * production 一律不放行，且格式刻意與真 id_token（JWT，含兩個點）不同，
+     * 不可能誤判。
+     */
+    const isDevToken = raw.startsWith('id-token:');
+    if (isDevToken && this.config.get<string>('env') === 'production') {
+      throw new UnauthorizedException('開發用 token 不可用於正式環境');
+    }
+
+    const { lineUserId } = isDevToken
+      ? { lineUserId: raw.slice('id-token:'.length) }
+      : await this.line.verifyIdToken(raw);
 
     const elder = await this.elders.findOne({ where: { lineUserId } });
     if (elder) {

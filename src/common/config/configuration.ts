@@ -40,7 +40,11 @@ export const configuration = () => ({
   line: {
     channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN ?? '',
     channelSecret: process.env.LINE_CHANNEL_SECRET ?? '',
+    channelId: process.env.LINE_CHANNEL_ID ?? '',
+    /** 填了 channel secret 就走真串接，否則 fake。 */
     provider: provider(process.env.LINE_CHANNEL_SECRET ? 'real' : undefined),
+    /** 加好友後自動建立長者資料（僅開發／試用階段；正式應走 M1 邀請流程）。 */
+    autoRegisterElder: process.env.LINE_AUTO_REGISTER_ELDER === 'true',
   },
 
   llm: { provider: provider(process.env.LLM_PROVIDER), model: process.env.LLM_MODEL ?? '' },

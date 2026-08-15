@@ -44,6 +44,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   }, []);
 
   const elder = me?.elders[0] ?? null;
+  // birthYear 為 null 代表尚未經 E-00 精靈確認 —— 不顯示年齡，而非顯示一個算出來的假數字。
   const age = elder?.birthYear ? new Date().getFullYear() - elder.birthYear : null;
 
   return (
@@ -56,7 +57,13 @@ export default function Shell({ children }: { children: React.ReactNode }) {
               <div className="elder-name">{elder?.displayName ?? '載入中'}</div>
               <div className="elder-meta">
                 {elder
-                  ? `${me?.elders[0]?.relation === '女兒' ? '媽媽' : ''} · ${age} 歲${elder.livingAlone ? ' · 獨居' : ''}`
+                  ? [
+                      elder.relation === '女兒' ? '媽媽' : elder.relation,
+                      age ? `${age} 歲` : null,
+                      elder.livingAlone ? '獨居' : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')
                   : ''}
               </div>
             </div>

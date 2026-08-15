@@ -1,6 +1,10 @@
 export const LINE_PORT = Symbol('LinePort');
 
-export type LineMessageModality = 'text' | 'audio' | 'image';
+/**
+ * follow 不是訊息，是「使用者加好友」事件 —— 綁定流程的起點。
+ * 放在同一個列舉裡，讓 webhook → 佇列 → processor 這條路徑不用分兩種型別。
+ */
+export type LineMessageModality = 'text' | 'audio' | 'image' | 'follow';
 
 export interface LineInboundEvent {
   lineUserId: string;
@@ -17,6 +21,12 @@ export interface LinePushMessage {
   text: string;
   /** 選填的快速回覆按鈕，例如「我會去／要改期」。 */
   quickReplies?: string[];
+}
+
+export interface LineProfile {
+  lineUserId: string;
+  /** LINE 上的顯示名稱。使用者可隨時改，只作為初始預設值，不當識別依據。 */
+  displayName: string;
 }
 
 export interface LinePort {
@@ -36,4 +46,11 @@ export interface LinePort {
 
   /** 以 LIFF id_token 換取 LINE 身分，用於守護者端與長者本人同意驗證。 */
   verifyIdToken(idToken: string): Promise<{ lineUserId: string }>;
+
+  /**
+   * 取得使用者的 LINE 顯示名稱。
+   * 用來當作初次加好友時的稱呼預設值 —— 比一律叫「您」自然，
+   * 且長者之後可在 E-00 精靈或直接跟 AI 說「叫我阿姨就好」來改。
+   */
+  getProfile(lineUserId: string): Promise<LineProfile>;
 }

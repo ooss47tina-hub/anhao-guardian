@@ -30,7 +30,7 @@ interface Matcher {
 
 /** 正向訊號比對表。命中即產生 signal。 */
 const MATCHERS: Matcher[] = [
-  { dimension: 'outing', keywords: ['去市場', '出門', '散步', '公園', '買菜'], value: 'went_out', confidence: 0.91 },
+  { dimension: 'outing', keywords: ['市場', '出門', '散步', '公園', '買菜', '走走', '外面'], value: 'went_out', confidence: 0.91 },
   { dimension: 'meal', keywords: ['吃飯', '早餐', '午餐', '晚餐', '煮'], value: 'ate', confidence: 0.86 },
   { dimension: 'meal', keywords: ['沒胃口', '吃不下'], value: 'poor_appetite', confidence: 0.82 },
   { dimension: 'sleep_subjective', keywords: ['睡不好', '睡不太好', '睡不著', '沒睡好', '失眠', '很累'], value: 'poor_sleep', confidence: 0.88 },

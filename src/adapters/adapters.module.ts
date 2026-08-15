@@ -13,6 +13,7 @@ import {
 } from 'src/ports';
 import { KmsCryptoAdapter } from './crypto/kms-crypto.adapter';
 import { LocalCryptoAdapter } from './crypto/local-crypto.adapter';
+import { LineAdapter } from './real/line.adapter';
 import { FakeLineAdapter } from './fake/fake-line.adapter';
 import { FakeLlmAdapter } from './fake/fake-llm.adapter';
 import { FakeOcrAdapter } from './fake/fake-ocr.adapter';
@@ -80,7 +81,7 @@ const providers: Provider[] = [
     provide: LINE_PORT,
     inject: [ConfigService, FakeLineAdapter],
     useFactory: (config: ConfigService, fake: FakeLineAdapter) =>
-      config.get<string>('line.provider') === 'real' ? notImplemented('LinePort', 'line.adapter.ts') : fake,
+      config.get<string>('line.provider') === 'real' ? new LineAdapter(config) : fake,
   },
   {
     provide: MY_HEALTH_BANK_PORT,

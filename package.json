@@ -18,7 +18,9 @@
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/database/data-source.ts",
     "seed": "ts-node -r tsconfig-paths/register src/database/seed.ts",
     "seed:history": "ts-node -r tsconfig-paths/register src/database/seed-history.ts",
-    "job": "ts-node -r tsconfig-paths/register src/scheduler/job-cli.ts"
+    "job": "ts-node -r tsconfig-paths/register src/scheduler/job-cli.ts",
+    "line:richmenu": "ts-node -r tsconfig-paths/register src/scripts/setup-rich-menu.ts",
+    "line:tunnel": "ngrok http 3000"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
