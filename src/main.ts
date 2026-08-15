@@ -23,6 +23,19 @@ async function bootstrap(): Promise<void> {
 
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
 
+  /**
+   * CORS：守護者端網頁（Next.js，開發時跑在 localhost:3001）跨埠呼叫本後端。
+   * production 改由 CORS_ORIGINS 環境變數列舉正式網域，未設定則不開放。
+   */
+  const corsOrigins = process.env.CORS_ORIGINS?.split(',').filter(Boolean);
+  app.enableCors({
+    origin:
+      process.env.NODE_ENV === 'production'
+        ? (corsOrigins ?? false)
+        : /^https?:\/\/localhost(:\d+)?$/,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+  });
+
   const port = process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 3000;
   await app.listen(port);
   logger.log(`安好 AI 自主生活守護 後端啟動於 :${port}`);

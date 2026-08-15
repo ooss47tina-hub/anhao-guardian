@@ -4,7 +4,7 @@ import { NestFactory } from '@nestjs/core';
 import { DataSource } from 'typeorm';
 import { AppModule } from 'src/app.module';
 import { ConsentService } from 'src/common/consent/consent.service';
-import { Elder, Guardian, GuardianLink, PersonaConfig } from 'src/database/entities';
+import { Elder, Guardian, GuardianLink, MedicalJourney } from 'src/database/entities';
 import { PersonaService } from 'src/modules/persona/persona.service';
 
 /**
@@ -31,6 +31,10 @@ async function main(): Promise<void> {
       locale: 'zh-TW',
       regionCode: '63000',
       status: 'active',
+      // 健保卡認證 token（FakeMyHealthBankAdapter 只檢查非空與到期日）。
+      // 有了它，health_record_sync 與 eligibility_check 才有東西可同步。
+      healthCardToken: 'fake-health-card-token',
+      healthCardTokenExpiresAt: new Date(Date.now() + 180 * 24 * 60 * 60 * 1000),
     });
 
     const guardian = await dataSource.getRepository(Guardian).save({
@@ -72,6 +76,22 @@ async function main(): Promise<void> {
         initiativeLevel: 'medium',
         reminderStyle: 'gentle',
       },
+    });
+
+    // 回診行程（介面原型 G-04/ E-04 的示範內容）。
+    const visitAt = new Date();
+    visitAt.setDate(visitAt.getDate() + 4);
+    visitAt.setHours(9, 30, 0, 0);
+    await dataSource.getRepository(MedicalJourney).save({
+      elderId: elder.id,
+      visitAt,
+      hospital: '慈濟醫院',
+      department: '骨科',
+      doctor: '王醫師',
+      source: 'chat_extract',
+      elderConfirmed: true,
+      status: 'confirmed',
+      completedNote: null,
     });
 
     logger.log(`種子資料建立完成：elder=${elder.id} guardian=${guardian.id}`);

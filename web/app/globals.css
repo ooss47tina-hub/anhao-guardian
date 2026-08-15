@@ -1,0 +1,216 @@
+/*
+ * 設計 tokens 取自介面原型「安好 AI 自主生活守護.dc.html」的實際用色：
+ * 米白暖底、深綠主色、琥珀「值得關心」、Noto Serif TC 標題。
+ * SRS 8.3：守護者端不做「監控中心」視覺；避免疾病化、恐嚇式紅色警示。
+ */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap');
+
+:root {
+  --bg: #f7f2ea;
+  --surface: #fffdf9;
+  --border: #e7ddce;
+  --border-soft: #f0e9de;
+  --ink: #2a2521;
+  --ink-2: #5f564d;
+  --ink-3: #8a8075;
+  --green: #2e6152;
+  --green-2: #3c6b58;
+  --green-tint: #eef4ef;
+  --green-line: #c9dacf;
+  --amber: #a8712c;
+  --amber-strong: #c8863c;
+  --amber-tint: #fbf3e7;
+  --amber-line: #ebd9bf;
+  --red: #a2453b;
+  --serif: 'Noto Serif TC', serif;
+  --sans: 'Noto Sans TC', system-ui, sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.shell { display: flex; min-height: 100vh; }
+
+/* ── 側欄 ── */
+.sidebar {
+  width: 232px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.nav-scroll { display: flex; flex-direction: column; gap: 4px; }
+.elder-card { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.avatar {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: var(--green); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--serif); font-size: 20px;
+}
+.elder-name { font-family: var(--serif); font-size: 17px; }
+.elder-meta { font-size: 12px; color: var(--ink-3); }
+
+.nav-item {
+  display: block; padding: 10px 12px; border-radius: 10px;
+  font-size: 14px; color: var(--ink-2);
+}
+.nav-item .code { color: var(--ink-3); font-size: 11px; margin-right: 6px; }
+.nav-item:hover { background: var(--bg); }
+.nav-item.active { background: var(--green-tint); color: var(--green); font-weight: 500; }
+.nav-item.active .code { color: var(--green-2); }
+
+.sidebar-note {
+  margin-top: auto; padding-top: 20px;
+  font-size: 12px; color: var(--ink-3); line-height: 1.7;
+  border-top: 1px solid var(--border-soft);
+}
+
+/* ── 主內容 ── */
+.main { flex: 1; padding: 36px 44px; max-width: 780px; }
+.page-title { font-family: var(--serif); font-size: 22px; margin-bottom: 4px; }
+.page-sub { color: var(--ink-3); font-size: 13px; margin-bottom: 24px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 24px;
+  margin-bottom: 16px;
+}
+.card h3 { font-size: 14px; color: var(--ink-2); margin-bottom: 12px; font-weight: 500; }
+
+/* ── 狀態 ── */
+.status-pill {
+  display: inline-block; padding: 8px 18px; border-radius: 999px;
+  font-family: var(--serif); font-size: 18px;
+}
+.st-stable { background: var(--green-tint); color: var(--green); }
+.st-insufficient_data { background: var(--border-soft); color: var(--ink-2); }
+.st-worth_attention { background: var(--amber-tint); color: var(--amber); border: 1px solid var(--amber-line); }
+
+.summary-line { font-size: 16px; margin: 14px 0 4px; }
+.muted { color: var(--ink-3); font-size: 12.5px; }
+
+.lvl {
+  display: inline-block; padding: 2px 10px; border-radius: 6px;
+  font-size: 12.5px; font-weight: 700;
+}
+.lvl-P2 { background: var(--amber-tint); color: var(--amber); }
+.lvl-P3 { background: #fdece9; color: var(--red); }
+.lvl-pending, .lvl-confirmed, .lvl-done, .lvl-rescheduling {
+  background: var(--green-tint); color: var(--green-2); font-weight: 500;
+}
+
+/* ── 表格與列 ── */
+.rows { margin-top: 8px; }
+.row-item {
+  display: flex; gap: 14px; align-items: baseline;
+  padding: 10px 0; border-bottom: 1px solid var(--border-soft);
+  font-size: 14px;
+}
+.row-item:last-child { border-bottom: none; }
+.row-when { color: var(--ink-3); font-size: 12.5px; white-space: nowrap; }
+.row-text { flex: 1; }
+
+/* ── 維度長條 ── */
+.dim-row { display: flex; align-items: center; gap: 10px; margin: 10px 0; font-size: 13.5px; }
+.dim-label { width: 3.2em; color: var(--ink-2); }
+.dim-track { flex: 1; height: 12px; background: var(--border-soft); border-radius: 6px; position: relative; }
+.dim-base { position: absolute; height: 100%; background: var(--green-line); border-radius: 6px; }
+.dim-recent { position: absolute; height: 5px; top: 3.5px; background: var(--green); border-radius: 3px; }
+.dim-num { width: 8em; text-align: right; color: var(--ink-3); font-size: 12.5px; }
+
+/* ── 按鈕 ── */
+button, .btn {
+  font-family: var(--sans);
+  background: var(--green); color: #fff;
+  border: 0; border-radius: 10px;
+  padding: 10px 18px; font-size: 14px; cursor: pointer;
+}
+.btn-ghost { background: var(--surface); color: var(--green); border: 1px solid var(--green-line); }
+.btn-quiet { background: var(--surface); color: var(--ink-2); border: 1px solid var(--border); }
+button:disabled { opacity: .5; cursor: default; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+
+/* ── 其他 ── */
+.disclaimer {
+  background: var(--bg); border-radius: 10px;
+  padding: 12px 16px; font-size: 13px; color: var(--ink-2);
+  margin-top: 14px;
+}
+.scope-tag {
+  display: inline-block; margin: 0 8px 8px 0; padding: 5px 12px;
+  border-radius: 8px; font-size: 13px;
+  background: var(--green-tint); color: var(--green-2);
+}
+.scope-tag.off { background: var(--border-soft); color: var(--ink-3); }
+details summary { cursor: pointer; color: var(--green-2); font-size: 14px; }
+details[open] summary { margin-bottom: 10px; }
+.quote {
+  border-left: 3px solid var(--green-line);
+  padding: 4px 12px; margin: 6px 0;
+  color: var(--ink-2); font-size: 13.5px;
+}
+.loading { color: var(--ink-3); padding: 40px 0; }
+.next-steps { margin: 10px 0 0 1.2em; font-size: 14.5px; }
+.next-steps li { margin: 6px 0; }
+
+/*
+ * 手機 LIFF 版（原型守護者端有「手機 LIFF」切換）。
+ * 側欄改為頂部橫向導覽，長者資訊收成一行。
+ */
+@media (max-width: 767px) {
+  .shell { flex-direction: column; }
+
+  .sidebar {
+    width: 100%;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    padding: 16px 16px 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .elder-card { margin-bottom: 12px; }
+  .avatar { width: 38px; height: 38px; font-size: 17px; }
+
+  /* 導覽橫向捲動，不換行擠壓 */
+  .nav-scroll {
+    flex-direction: row;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .nav-scroll::-webkit-scrollbar { display: none; }
+  .nav-scroll .nav-item {
+    display: block;
+    white-space: nowrap;
+    padding: 8px 14px;
+    font-size: 13.5px;
+  }
+  .nav-scroll .nav-item .code { display: none; }
+
+  .sidebar-note { display: none; }
+
+  .main { padding: 20px 16px 40px; max-width: 100%; }
+  .page-title { font-size: 19px; }
+  .card { padding: 18px 16px; border-radius: 12px; }
+  .status-pill { font-size: 16px; padding: 7px 16px; }
+  .dim-label { width: 2.8em; font-size: 13px; }
+  .dim-num { width: 6.5em; font-size: 11.5px; }
+  .btn-row button, .btn-row .btn { flex: 1; min-width: 0; text-align: center; }
+  .row-item { flex-wrap: wrap; gap: 6px 12px; }
+}

@@ -5,8 +5,14 @@ import { Repository } from 'typeorm';
 import { Actor, CurrentActor } from 'src/common/auth/actor';
 import { LineAuthGuard } from 'src/common/auth/line-auth.guard';
 import { AuditService } from 'src/common/audit/audit.service';
-import { AckAction, AckFeedback, AlertAck } from 'src/database/entities';
+import { AckAction, AckFeedback, AlertAck, WeeklyDigest } from 'src/database/entities';
 import { GuardianViewService } from './guardian-view.service';
+
+class DigestFeedbackDto {
+  /** 有幫助／不太準／這種不用提醒（介面原型 G-02；SRS F3-02）。 */
+  @IsIn(['helpful', 'inaccurate', 'mute_this_type'])
+  feedback: 'helpful' | 'inaccurate' | 'mute_this_type';
+}
 
 class AckAlertDto {
   @IsIn(['contacted', 'inaccurate', 'mute_this_type'])
@@ -30,6 +36,7 @@ export class GuardianController {
   constructor(
     private readonly view: GuardianViewService,
     @InjectRepository(AlertAck) private readonly acks: Repository<AlertAck>,
+    @InjectRepository(WeeklyDigest) private readonly digests: Repository<WeeklyDigest>,
     private readonly audit: AuditService,
   ) {}
 
@@ -84,6 +91,34 @@ export class GuardianController {
     });
 
     return ack;
+  }
+
+  /**
+   * POST /v1/digests/:id/feedback — 週摘要回饋（SRS §7）。
+   * 作為模型與閾值調校資料（SRS F3-02），需可追溯故寫 audit。
+   */
+  @Post('digests/:digestId/feedback')
+  async digestFeedback(
+    @CurrentActor() actor: Actor,
+    @Param('digestId') digestId: string,
+    @Body() dto: DigestFeedbackDto,
+  ) {
+    this.assertGuardian(actor);
+    const digest = await this.digests.findOneByOrFail({ id: digestId });
+    await this.view.assertLinked(actor.id, digest.elderId);
+
+    digest.usefulnessFeedback = dto.feedback;
+    await this.digests.save(digest);
+
+    await this.audit.record({
+      actorType: 'guardian',
+      actorId: actor.id,
+      action: 'digest.feedback',
+      targetTable: 'weekly_digest',
+      targetId: digestId,
+      after: { feedback: dto.feedback },
+    });
+    return { ok: true };
   }
 
   /** G-04 醫療行程。只有完成狀態與必要摘要，不做全程定位。 */

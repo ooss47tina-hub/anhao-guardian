@@ -23,6 +23,22 @@ npm run start:dev
 npm test
 ```
 
+## 守護者端網頁
+
+`web/` 是守護者端（G-01～G-05），Next.js 16 + React 19，對接本後端。
+
+```bash
+cd web && npm install && cp .env.example .env.local && npm run dev
+```
+
+開 <http://localhost:3001>。後端需同時執行（:3000）。
+
+頁面對應：`/` G-01 最近好嗎、`/digest` G-02 本週摘要、`/alerts/[id]` G-03 變化詳情、
+`/journeys` G-04 醫療行程、`/settings` G-05 設定與授權。桌機與手機（LIFF 尺寸）皆已驗證。
+
+身分目前用 FakeLineAdapter 的示範 token；正式環境改由 LIFF 取得 id_token —— 只需改
+`web/lib/api.ts` 的 `token()` 一個函式，頁面程式碼不動。
+
 ## 開發檢視頁
 
 後端跑起來後，用瀏覽器開 <http://localhost:3000/dev>：

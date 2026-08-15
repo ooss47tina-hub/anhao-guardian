@@ -26,7 +26,7 @@ export interface ElderStatusView {
   /** 一句 AI Summary。不含聊天原文。 */
   summary: string;
   updatedAt: string;
-  recentEvents: Array<{ when: string; text: string; tag: string }>;
+  recentEvents: Array<{ when: string; text: string; tag: string; alertId?: string }>;
 }
 
 export interface AlertDetailView {
@@ -147,7 +147,7 @@ export class GuardianViewService {
         prompt: alert.promptVersion,
       },
       baselineSnapshotId: alert.baselineSnapshotId,
-      comparison: this.buildComparison(alert.dimensions, snapshots),
+      comparison: await this.buildComparison(alert.elderId, alert.dimensions, snapshots),
       supportingSignals: signals.map((s) => ({
         dimension: s.dimension,
         occurredOn: s.occurredOn,
@@ -175,16 +175,32 @@ export class GuardianViewService {
       .getMany();
   }
 
-  private buildComparison(
+  /** 近 7 天實際次數 vs 個人 Baseline 週均，供 G-03 對照圖。 */
+  private async buildComparison(
+    elderId: string,
     dimensions: SignalDimension[],
     snapshots: BaselineSnapshot[],
-  ): AlertDetailView['comparison'] {
+  ): Promise<AlertDetailView['comparison']> {
+    const from = new Date();
+    from.setDate(from.getDate() - 6);
+
+    const rows: Array<{ dimension: SignalDimension; count: string }> = await this.signals
+      .createQueryBuilder('s')
+      .select('s.dimension', 'dimension')
+      .addSelect('COUNT(*)', 'count')
+      .where('s.elder_id = :elderId', { elderId })
+      .andWhere('s.occurred_on >= :from', { from: from.toISOString().slice(0, 10) })
+      .andWhere('s.dimension IN (:...dims)', { dims: dimensions })
+      .groupBy('s.dimension')
+      .getRawMany();
+    const recent = new Map(rows.map((r) => [r.dimension, Number.parseInt(r.count, 10)]));
+
     return dimensions.map((dimension) => {
       const snapshot = snapshots.find((s) => s.dimension === dimension);
       return {
         dimension,
         label: DIMENSION_LABELS[dimension],
-        recent: 0,
+        recent: recent.get(dimension) ?? 0,
         baseline: snapshot ? Number((snapshot.mean * 7).toFixed(1)) : 0,
       };
     });
@@ -211,6 +227,7 @@ export class GuardianViewService {
         when: a.createdAt.toISOString().slice(0, 10),
         text: a.headline,
         tag: a.level,
+        alertId: a.id,
       })),
       ...journeys.map((j) => ({
         when: j.visitAt.toISOString().slice(0, 10),
