@@ -143,7 +143,10 @@ describe('OpenAI prompt 內含產品原則', () => {
     const { buildChatSystemPrompt } = await import('src/adapters/real/openai-llm.prompts');
     const prompt = buildChatSystemPrompt(persona);
     expect(prompt).toContain('只抽長者本人的事');
-    expect(prompt).toContain('否定句不抽正向訊號');
+    expect(prompt).toContain('否定句就整個不要抽');
+    // 負向值不可進四個統計維度 —— 會被算成一次正向事件，把基線灌高。
+    expect(prompt).toContain('stayed_home');
+    expect(prompt).toContain('poor_appetite');
   });
 
   it('pattern 說明 prompt 禁止推測與診斷詞彙', async () => {

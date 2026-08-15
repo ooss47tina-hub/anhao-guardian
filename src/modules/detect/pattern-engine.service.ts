@@ -4,7 +4,13 @@ import { Repository } from 'typeorm';
 import { DiagnosticLanguageFilter } from 'src/common/safety/diagnostic-language.filter';
 import { currentVersionSet } from 'src/common/versioning/versions';
 import { AlertSignalLink, BaselineSnapshot, LifeSignal, PatternAlert } from 'src/database/entities';
-import { AlertLevel, BASELINE_DIMENSIONS, DIMENSION_LABELS, SignalDimension } from 'src/domain/signal-dimension';
+import {
+  AlertLevel,
+  BASELINE_DIMENSIONS,
+  BASELINE_POSITIVE_VALUES,
+  DIMENSION_LABELS,
+  SignalDimension,
+} from 'src/domain/signal-dimension';
 import { LLM_PORT, LlmPort } from 'src/ports/llm.port';
 import { BaselineService } from 'src/modules/baseline/baseline.service';
 
@@ -139,6 +145,9 @@ export class PatternEngineService {
       .andWhere('s.occurred_on >= :from', { from: from.toISOString().slice(0, 10) })
       .andWhere('s.occurred_on <= :to', { to: asOf.toISOString().slice(0, 10) })
       .andWhere('s.dimension IN (:...dims)', { dims: BASELINE_DIMENSIONS })
+      // 與 BaselineService.computeDimensions 用同一個口徑 —— 兩邊若不一致，
+      // 「近 7 天」與「平常」就不是同一種東西在比較。
+      .andWhere('s.value IN (:...values)', { values: BASELINE_POSITIVE_VALUES })
       .groupBy('s.dimension')
       .getRawMany();
 

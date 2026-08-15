@@ -4,7 +4,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { InsufficientBaselineError } from 'src/common/errors/product-rule.errors';
 import { BaselineSnapshot, LifeSignal } from 'src/database/entities';
-import { BASELINE_DIMENSIONS, SignalDimension } from 'src/domain/signal-dimension';
+import {
+  BASELINE_DIMENSIONS,
+  BASELINE_POSITIVE_VALUES,
+  SignalDimension,
+} from 'src/domain/signal-dimension';
 
 export interface BaselineGateResult {
   /** 是否可產生「跟平常不一樣」的判斷與家人通知。 */
@@ -107,6 +111,9 @@ export class BaselineService {
         .andWhere('s.occurred_on >= :from', { from })
         .andWhere('s.occurred_on <= :to', { to })
         .andWhere('s.dimension IN (:...dims)', { dims: BASELINE_DIMENSIONS })
+        // 只計入「事情真的發生了」的值 —— stayed_home / poor_appetite 這類
+        // 負向訊號若計入，會把基線灌高並讓後續的「比平常少」失準。
+        .andWhere('s.value IN (:...values)', { values: BASELINE_POSITIVE_VALUES })
         // 被人工判定為錯誤的訊號不進 Baseline。
         .andWhere(
           `NOT EXISTS (SELECT 1 FROM signal_review r

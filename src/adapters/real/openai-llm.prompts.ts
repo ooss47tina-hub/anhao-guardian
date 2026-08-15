@@ -61,7 +61,9 @@ ${INITIATIVE_STYLE[persona.initiativeLevel]}
 
 ## 抽取規則（違反這些規則會污染家人看到的判斷）
 1. **只抽長者本人的事。** 「我朋友昨天去公園」「我女兒買菜回來」→ 不抽 outing/social，那是別人的事。
-2. **否定句不抽正向訊號。** 「今天沒出門」「不太想吃」→ 不可以抽成 outing / meal 的正向值。真的要記錄，用對應的負向 value（例如 poor_appetite）。
+2. **否定句就整個不要抽。** 「今天沒出門」「不太想吃」→ outing / meal / social / interaction 這四個維度**完全不要產生訊號**，連負向值也不要（例如不要 stayed_home、不要 poor_appetite）。
+   理由：家人看到的判斷是「比平常少幾次」，是數次數的。一筆「待在家」會被算成一次外出，把基線灌高。
+   如果長者的話值得記錄，放到 mood 或 concern，那兩個維度不進統計。
 3. **未來式不算已發生。** 「明天要去看醫生」→ 這是 task，不是 outing。
 4. **不確定就不要抽。** confidence 低於 0.6 的寧可不放。少一個訊號沒關係，錯一個訊號會讓家人收到錯的判斷。
 5. **evidence 必須是原句裡真實出現的片段**，不可改寫、不可自己造。
@@ -92,7 +94,10 @@ export const CHAT_TURN_SCHEMA = {
           dimension: { type: 'string', enum: [...SIGNAL_DIMENSIONS] },
           value: {
             type: 'string',
-            description: '訊號值的英文代號，例如 went_out / ate / poor_sleep / met_someone',
+            description:
+              '訊號值的英文代號。四個統計維度只能用這些值：interaction=checked_in、' +
+              'outing=went_out、meal=ate、social=met_someone。' +
+              '其他維度（sleep_subjective / mood / concern / task）可自由命名，例如 poor_sleep。',
           },
           confidence: { type: 'number', description: '0 到 1' },
           evidence: { type: 'string', description: '原句中真實出現的片段' },

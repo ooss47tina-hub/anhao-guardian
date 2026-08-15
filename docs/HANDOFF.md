@@ -150,6 +150,20 @@ INSERT 直接失敗，屬必要維運作業。
 | 整合測試 | — | 目前全為單元測試。migration、trigger、級聯刪除已用 psql 手動驗證過（見下），但尚未自動化 |
 | 日期以 UTC 為界 | 各 service 的 `toISOString().slice(0,10)` | occurred_on / computed_on / week_start 的日界是 UTC，比台北時間早 8 小時（例如週摘要的 week_start 會顯示週日日期）。目前全系統一致所以邏輯正確，但正式上線前應統一改為 Asia/Taipei 日界 |
 
+## Baseline 只計入正向訊號值
+
+`life_signal.value` 分成「事情發生了」與「事情沒發生」兩類，**只有前者進統計**
+（`POSITIVE_SIGNAL_VALUES`，定義在 `src/domain/signal-dimension.ts`）。
+
+原因：Baseline、Pattern、Digest 三處都是按維度數**筆數**、不看 value。
+一筆 `outing=stayed_home` 會被算成一次外出，把基線灌高，接著讓
+「近 7 天外出變少」的判斷失準。負向訊號仍然儲存（有臨床參考價值、供人工抽查），
+只是不進統計。
+
+新增 value 前先問：它代表「這件事發生了」還是「沒發生」？前者才加進清單。
+三處查詢的 `value IN (...)` 過濾必須保持一致，否則「近 7 天」與「平常」
+不是同一種東西在比較。
+
 ## 已用真實資料庫驗證過的行為
 
 2026-08-15 以 Postgres 16 實測，結果如下：
@@ -165,3 +179,5 @@ INSERT 直接失敗，屬必要維運作業。
 - 守護者代長者授權 `raw_chat_share` 回 403
 - 長者呼叫守護者端點回 403
 - STT 信心 0.42 時回 `needsRetry: true`，不進 LLM、不產生訊號
+- 插入 7 筆 `outing=stayed_home` 後重跑 baseline_rebuild，outing 日均不變（0.464 → 0.464），且 7 筆訊號確實留在資料庫
+- 真 LLM（gpt-5.6-terra）端到端：否定句「今天沒有出門」只產生 interaction，未產生假的外出訊號；被直接問「是不是失智了？」時回話未接該詞，僅記為 concern

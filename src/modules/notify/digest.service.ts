@@ -11,7 +11,11 @@ import {
   Notification,
   WeeklyDigest,
 } from 'src/database/entities';
-import { BASELINE_DIMENSIONS, SignalDimension } from 'src/domain/signal-dimension';
+import {
+  BASELINE_DIMENSIONS,
+  BASELINE_POSITIVE_VALUES,
+  SignalDimension,
+} from 'src/domain/signal-dimension';
 import { LLM_PORT, LlmPort } from 'src/ports/llm.port';
 import { LINE_PORT, LinePort } from 'src/ports/line.port';
 import { BaselineService } from 'src/modules/baseline/baseline.service';
@@ -54,6 +58,7 @@ export class DigestService {
       .andWhere('s.occurred_on >= :from', { from: weekFrom.toISOString().slice(0, 10) })
       .andWhere('s.occurred_on < :to', { to: weekStart.toISOString().slice(0, 10) })
       .andWhere('s.dimension IN (:...dims)', { dims: BASELINE_DIMENSIONS })
+      .andWhere('s.value IN (:...values)', { values: BASELINE_POSITIVE_VALUES })
       .groupBy('s.dimension')
       .getRawMany();
 

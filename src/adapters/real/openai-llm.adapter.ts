@@ -44,7 +44,7 @@ export class OpenAiLlmAdapter implements LlmPort {
       throw new Error('LLM_PROVIDER=openai 時必須設定 LLM_API_KEY');
     }
 
-    this.model = config.get<string>('llm.model') || 'gpt-4o';
+    this.model = config.get<string>('llm.model') || 'gpt-5.6-terra';
     this.client = new OpenAI({
       apiKey,
       baseURL: config.get<string>('llm.baseUrl') || undefined,

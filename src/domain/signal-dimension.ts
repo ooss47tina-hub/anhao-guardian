@@ -26,6 +26,33 @@ export const BASELINE_DIMENSIONS: SignalDimension[] = [
   'social',
 ];
 
+/**
+ * Baseline 只計入「事情真的發生了」的訊號值。
+ *
+ * Baseline 與 Pattern 都是按維度數「筆數」，不看 value —— 所以一筆
+ * outing=stayed_home（待在家）會被當成一次外出，把基線灌高，
+ * 接著讓「近 7 天外出變少」的判斷失準。負向訊號仍然儲存（它有臨床參考價值，
+ * 也供人工抽查），只是不進統計。
+ *
+ * 新增 value 前先想清楚：它代表「這件事發生了」還是「這件事沒發生」。
+ */
+export const POSITIVE_SIGNAL_VALUES: Record<SignalDimension, string[]> = {
+  interaction: ['checked_in'],
+  outing: ['went_out'],
+  meal: ['ate'],
+  social: ['met_someone'],
+  // 以下三個維度不進 Baseline 統計，列出僅為完整性。
+  sleep_subjective: [],
+  mood: [],
+  concern: [],
+  task: [],
+};
+
+/** 供 SQL IN 子句使用的扁平清單（只含四個 Baseline 維度）。 */
+export const BASELINE_POSITIVE_VALUES: string[] = BASELINE_DIMENSIONS.flatMap(
+  (d) => POSITIVE_SIGNAL_VALUES[d],
+);
+
 export const DIMENSION_LABELS: Record<SignalDimension, string> = {
   interaction: '互動',
   outing: '外出',

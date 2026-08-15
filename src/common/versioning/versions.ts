@@ -13,7 +13,7 @@ export const VERSIONS = {
   model: 'llm-2026-07',
 
   /** Prompt 版本。Prompt 文字每次變更都要進版。 */
-  prompt: 'prompt-v2.1',
+  prompt: 'prompt-v2.2',
 
   /** Life Signal 萃取器版本，寫入 life_signal.extractor_version。 */
   extractor: 'extractor-v1.2',
