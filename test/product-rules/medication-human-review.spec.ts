@@ -1,6 +1,7 @@
 import { HumanReviewRequiredError } from 'src/common/errors/product-rule.errors';
 import { MedicationService } from 'src/modules/medical/medication.service';
 import { MedicationItem } from 'src/database/entities';
+import { IsNull } from 'typeorm';
 
 /**
  * 交接規格 §2.4、§6：藥名與劑量未經人工確認不可建立用藥提醒。
@@ -90,7 +91,9 @@ describe('產品原則：藥品人工確認', () => {
     ];
     const items = {
       find: jest.fn(async ({ where }: { where: Record<string, unknown> }) => {
-        expect(where).toHaveProperty('humanVerifiedBy');
+        // 斷言「值」而非「key 存在」—— toHaveProperty 在 { humanVerifiedBy: undefined }
+        // 也會過，而 undefined 正是 TypeORM 會整個略過條件的危險情況。
+        expect(where.humanVerifiedBy).toEqual(IsNull());
         return rows.filter((r) => r.humanVerifiedBy === null);
       }),
     };
