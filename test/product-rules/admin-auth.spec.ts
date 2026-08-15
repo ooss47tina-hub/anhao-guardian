@@ -1,6 +1,11 @@
 import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { GUARDS_METADATA, PATH_METADATA, METHOD_METADATA } from '@nestjs/common/constants';
-import { AdminAuthGuard, ADMIN_COOKIE_NAME, OPERATOR_ACTOR_ID } from 'src/common/auth/admin-auth.guard';
+import {
+  AdminAuthGuard,
+  ADMIN_COOKIE_NAME,
+  OPERATOR_ACTOR_ID,
+  adminTokenMatches,
+} from 'src/common/auth/admin-auth.guard';
 import { AdminController } from 'src/modules/admin/admin.controller';
 import { AdminConsoleController } from 'src/modules/admin/admin-console.controller';
 
@@ -37,6 +42,13 @@ describe('產品原則：營運後台認證', () => {
   it('token 錯誤就拒絕', () => {
     const guard = guardWith('s3cret');
     expect(() => guard.canActivate(contextWith({ authorization: 'Bearer wrong' }))).toThrow(
+      UnauthorizedException,
+    );
+  });
+
+  it('同長度的錯誤 token 也拒絕（驗證內容比對真的有跑，不只長度短路）', () => {
+    const guard = guardWith('s3cret');
+    expect(() => guard.canActivate(contextWith({ authorization: 'Bearer s3creX' }))).toThrow(
       UnauthorizedException,
     );
   });
@@ -86,5 +98,15 @@ describe('產品原則：營運後台認證', () => {
     }
 
     expect(unprotected.sort()).toEqual(allowed.sort());
+  });
+});
+
+describe('adminTokenMatches', () => {
+  it('長度相同但內容不同 → false', () => {
+    expect(adminTokenMatches('s3creX', 's3cret')).toBe(false);
+  });
+
+  it('完全相同 → true', () => {
+    expect(adminTokenMatches('s3cret', 's3cret')).toBe(true);
   });
 });

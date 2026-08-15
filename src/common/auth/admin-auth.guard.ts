@@ -15,6 +15,13 @@ export const ADMIN_COOKIE_NAME = 'anhao_admin';
  */
 export const OPERATOR_ACTOR_ID = '00000000-0000-0000-0000-00000000ad11';
 
+/** timing-safe 的 token 比對。長度不同直接不等 —— 長度本身會外洩，但遠比逐字元試探弱。 */
+export function adminTokenMatches(presented: string, expected: string): boolean {
+  const a = Buffer.from(presented);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 /**
  * 營運後台認證。
  *
@@ -39,7 +46,7 @@ export class AdminAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const presented = this.presentedToken(request.headers ?? {});
 
-    if (presented === null || !this.matches(presented, expected)) {
+    if (presented === null || !adminTokenMatches(presented, expected)) {
       throw new UnauthorizedException('營運後台憑證無效');
     }
 
@@ -53,7 +60,17 @@ export class AdminAuthGuard implements CanActivate {
     if (typeof cookie === 'string') {
       for (const part of cookie.split(';')) {
         const [name, ...rest] = part.trim().split('=');
-        if (name === ADMIN_COOKIE_NAME) return decodeURIComponent(rest.join('='));
+        if (name === ADMIN_COOKIE_NAME) {
+          const raw = rest.join('=');
+          try {
+            return decodeURIComponent(raw);
+          } catch {
+            // 惡意或畸形的 cookie 值（如 "%"）解碼會丟 URIError，
+            // 不能讓它變成未捕捉例外把 401 變成 500。
+            // 直接視為原始（未解碼）字串繼續走比對，幾乎必定比對失敗，維持 fail-closed。
+            return raw;
+          }
+        }
       }
     }
 
@@ -63,13 +80,5 @@ export class AdminAuthGuard implements CanActivate {
     }
 
     return null;
-  }
-
-  private matches(presented: string, expected: string): boolean {
-    const a = Buffer.from(presented);
-    const b = Buffer.from(expected);
-    // timingSafeEqual 長度不同會直接拋錯，先擋掉。
-    // 長度本身會外洩，但那遠比逐字元試探弱。
-    return a.length === b.length && timingSafeEqual(a, b);
   }
 }

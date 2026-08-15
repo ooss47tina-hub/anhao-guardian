@@ -2,7 +2,7 @@ import { Body, Controller, Get, Header, Post, Res, UnauthorizedException } from 
 import { ConfigService } from '@nestjs/config';
 import { IsNotEmpty, IsString } from 'class-validator';
 import type { Response } from 'express';
-import { ADMIN_COOKIE_NAME } from 'src/common/auth/admin-auth.guard';
+import { ADMIN_COOKIE_NAME, adminTokenMatches } from 'src/common/auth/admin-auth.guard';
 import { ADMIN_CONSOLE_HTML } from './admin-console.html';
 
 class LoginDto {
@@ -31,7 +31,9 @@ export class AdminConsoleController {
   @Post('login')
   login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response): { ok: true } {
     const expected = this.config.get<string>('admin.token') ?? '';
-    if (expected === '' || dto.token !== expected) {
+    // 這是唯一免認證且收到原始 token 的端點，比對必須與 guard 共用同一個 timing-safe 函式，
+    // 否則攻擊者可對這支端點打時間側錄，逐字元試出 token。
+    if (expected === '' || !adminTokenMatches(dto.token, expected)) {
       throw new UnauthorizedException('憑證無效');
     }
 
