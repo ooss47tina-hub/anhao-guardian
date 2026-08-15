@@ -1,6 +1,11 @@
 import 'reflect-metadata';
+import { config as loadEnv } from 'dotenv';
 import { DataSource } from 'typeorm';
 import { ALL_ENTITIES } from './entities';
+
+// TypeORM CLI 不經過 NestJS，@nestjs/config 的 .env 載入不會發生。
+// 少了這行，改過 .env 的 DATABASE_URL 仍會連到預設位址。
+loadEnv();
 
 /**
  * TypeORM CLI 用的 DataSource（migration:run / migration:revert）。
