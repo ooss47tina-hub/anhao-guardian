@@ -82,4 +82,31 @@ describe('產品原則：藥品人工確認', () => {
     await service.createReminder({ itemId: 'item-3', elderId: 'elder-1', scheduledAt: new Date() });
     expect(notificationsSave).toHaveBeenCalledTimes(1);
   });
+
+  it('待覆核清單只回未確認的項目，最舊的排前面', async () => {
+    const rows = [
+      { id: 'item-1', humanVerifiedBy: null, createdAt: new Date('2026-08-01') },
+      { id: 'item-2', humanVerifiedBy: 'reviewer-1', createdAt: new Date('2026-08-02') },
+    ];
+    const items = {
+      find: jest.fn(async ({ where }: { where: Record<string, unknown> }) => {
+        expect(where).toHaveProperty('humanVerifiedBy');
+        return rows.filter((r) => r.humanVerifiedBy === null);
+      }),
+    };
+    // MedicationService constructor：items, notifications, audit, ocr（共 4 個）
+    const service = new MedicationService(
+      items as never,
+      {} as never,
+      {} as never,
+      {} as never,
+    );
+
+    const pending = await service.pendingItems();
+
+    expect(pending.map((i) => i.id)).toEqual(['item-1']);
+    expect(items.find).toHaveBeenCalledWith(
+      expect.objectContaining({ order: { createdAt: 'ASC' } }),
+    );
+  });
 });

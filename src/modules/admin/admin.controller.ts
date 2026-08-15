@@ -88,6 +88,15 @@ export class AdminController {
     });
   }
 
+  /**
+   * GET /admin/medications/pending — 待人工確認的藥品項目。
+   * 沒有這個清單，交接規格 §6 的人工確認關卡實務上做不到。
+   */
+  @Get('medications/pending')
+  async pendingMedications() {
+    return { items: await this.medication.pendingItems() };
+  }
+
   /** 藥品人工確認佇列 —— 未確認前不得建立用藥提醒（交接規格 §6）。 */
   @Post('medications/:itemId/verify')
   async verifyMedication(

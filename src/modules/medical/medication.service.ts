@@ -134,4 +134,18 @@ export class MedicationService {
   async pendingCount(elderId: string): Promise<number> {
     return this.items.count({ where: { elderId, humanVerifiedBy: IsNull() } });
   }
+
+  /**
+   * 待人工確認的項目清單，供營運後台覆核。
+   *
+   * 最舊的排前面 —— 這是佇列不是列表，先進來的先處理。
+   * 同樣用 IsNull()：TypeORM 會把 undefined 當作「不加條件」，
+   * 結果會回傳全部項目而不是待確認的。
+   */
+  async pendingItems(): Promise<MedicationItem[]> {
+    return this.items.find({
+      where: { humanVerifiedBy: IsNull() },
+      order: { createdAt: 'ASC' },
+    });
+  }
 }
