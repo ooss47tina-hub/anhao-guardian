@@ -109,6 +109,13 @@ describe('產品原則：營運後台認證', () => {
     );
   });
 
+  it('同長度的錯誤 token 也拒絕（驗證內容比對真的有跑，不只長度短路）', () => {
+    const guard = guardWith('s3cret');
+    expect(() => guard.canActivate(contextWith({ authorization: 'Bearer s3creX' }))).toThrow(
+      UnauthorizedException,
+    );
+  });
+
   it('cookie 帶對的 token 就放行，並掛上 admin 身分', () => {
     const guard = guardWith('s3cret');
     const context = contextWith({ cookie: `${ADMIN_COOKIE_NAME}=s3cret` });
@@ -283,7 +290,9 @@ export class AdminConsoleController {
   @Post('login')
   login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response): { ok: true } {
     const expected = this.config.get<string>('admin.token') ?? '';
-    if (expected === '' || dto.token !== expected) {
+    // 這是唯一免認證且收到原始 token 的端點 —— 比對必須 timing-safe，
+    // 與 AdminAuthGuard 共用同一個比對函式。
+    if (expected === '' || !adminTokenMatches(dto.token, expected)) {
       throw new UnauthorizedException('憑證無效');
     }
 
@@ -391,7 +400,8 @@ ADMIN_TOKEN=dev-admin-token
 - [ ] **Step 12: Commit**
 
 ```bash
-git add src/common/auth/admin-auth.guard.ts src/common/config/configuration.ts src/modules/admin/ test/product-rules/admin-auth.spec.ts .env
+# .env 是 gitignored 且含真實金鑰，只改不 commit；進版控的是 .env.example。
+git add src/common/auth/admin-auth.guard.ts src/common/config/configuration.ts src/modules/admin/ test/product-rules/admin-auth.spec.ts .env.example
 git commit -m "feat(admin): /admin/* 加上認證
 
 AdminAuthGuard 比對單一 ADMIN_TOKEN，通過後發 httpOnly cookie。
