@@ -9,6 +9,7 @@ import { VERSIONS } from 'src/common/versioning/versions';
 import { Notification, ReviewVerdict } from 'src/database/entities';
 import { SignalExtractionService } from 'src/modules/extract/signal-extraction.service';
 import { MedicationService } from 'src/modules/medical/medication.service';
+import { AdminOverviewService } from './admin-overview.service';
 
 class ReviewDto {
   @IsIn(['correct', 'corrected', 'discarded'])
@@ -40,11 +41,21 @@ class VerifyMedicationDto {
 @UseGuards(AdminAuthGuard)
 export class AdminController {
   constructor(
+    private readonly overview: AdminOverviewService,
     private readonly extraction: SignalExtractionService,
     private readonly medication: MedicationService,
     @InjectRepository(Notification) private readonly notifications: Repository<Notification>,
     private readonly config: ConfigService,
   ) {}
+
+  /**
+   * GET /admin/elders — 長者總覽。
+   * 只回數量與狀態，不提供任何 message.text 的讀取路徑（設計規格 §2.1）。
+   */
+  @Get('elders')
+  async elders() {
+    return { elders: await this.overview.listElders() };
+  }
 
   /** GET /admin/review/queue — 低信心訊號抽查佇列。 */
   @Get('review/queue')

@@ -108,6 +108,7 @@ describe('產品原則：營運後台認證', () => {
       const config = { get: jest.fn(() => 0.7) };
 
       const controller = new AdminController(
+        {} as never, // overview：這條測試不呼叫長者總覽方法
         extraction as never,
         medication as never,
         notifications as never,
