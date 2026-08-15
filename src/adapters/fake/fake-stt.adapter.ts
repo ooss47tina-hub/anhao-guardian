@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { SttPort, SttResult } from 'src/ports/stt.port';
+import { SttAudio, SttPort, SttResult } from 'src/ports/stt.port';
 
 /**
  * 假 STT。以 ref 中的標記決定回傳，讓「低信心要求重說」這條路徑可被測試。
@@ -16,10 +16,11 @@ export class FakeSttAdapter implements SttPort {
     this.transcripts.set(ref, text);
   }
 
-  async transcribe(audio: { ref: string; mimeType: string }): Promise<SttResult> {
-    const lowConfidence = audio.ref.includes('lowconf');
+  async transcribe(audio: SttAudio): Promise<SttResult> {
+    const ref = audio.ref ?? '';
+    const lowConfidence = ref.includes('lowconf');
     return {
-      text: this.transcripts.get(audio.ref) ?? '今天早上我去市場買菜',
+      text: this.transcripts.get(ref) ?? '今天早上我去市場買菜',
       confidence: lowConfidence ? 0.42 : 0.93,
       language: 'zh-TW',
     };

@@ -13,6 +13,7 @@ import { IsNotEmpty, IsObject, IsOptional, IsString, MaxLength } from 'class-val
 import { Actor, CurrentActor } from 'src/common/auth/actor';
 import { LineAuthGuard } from 'src/common/auth/line-auth.guard';
 import { STT_PORT, SttPort } from 'src/ports/stt.port';
+import { OBJECT_STORAGE_PORT, ObjectStoragePort } from 'src/ports/object-storage.port';
 import { ConfigService } from '@nestjs/config';
 import { ConversationService } from 'src/modules/conversation/conversation.service';
 import { MemoryService } from 'src/modules/memory/memory.service';
@@ -80,6 +81,7 @@ export class ElderController {
     private readonly links: LinkService,
     private readonly config: ConfigService,
     @Inject(STT_PORT) private readonly stt: SttPort,
+    @Inject(OBJECT_STORAGE_PORT) private readonly storage: ObjectStoragePort,
   ) {}
 
   /** POST /v1/chat/turn — 產生 AI 回話，同步觸發 extract。 */
@@ -98,7 +100,15 @@ export class ElderController {
   @Post('stt')
   async transcribe(@CurrentActor() actor: Actor, @Body() dto: SttDto) {
     this.assertElder(actor);
-    const result = await this.stt.transcribe({ ref: dto.audioRef, mimeType: dto.mimeType });
+
+    // 轉寫需要音訊內容，不是一個參照 —— 從物件儲存讀回位元組是呼叫端的責任，
+    // STT 實作不必知道音檔存在哪裡。
+    const object = await this.storage.get(dto.audioRef);
+    const result = await this.stt.transcribe({
+      data: object.data,
+      mimeType: object.mimeType || dto.mimeType,
+      ref: dto.audioRef,
+    });
     const minConfidence = this.config.get<number>('rules.sttMinConfidence') ?? 0.75;
 
     return {

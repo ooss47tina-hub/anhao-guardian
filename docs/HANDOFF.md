@@ -13,7 +13,7 @@
 
 | 階段 | 位置 | 狀態 |
 |---|---|---|
-| Ingest | `src/modules/ingest/` | 骨架（LINE 為 Fake，佇列為記憶體內） |
+| Ingest | `src/modules/ingest/` | LINE 與 STT 已實作；佇列仍為記憶體內（見文末待辦） |
 | Extract | `src/modules/extract/signal-extraction.service.ts` | 已實作（OpenAI structured outputs；未設 LLM_API_KEY 時退回規則式 Fake） |
 | Baseline | `src/modules/baseline/baseline.service.ts` | 已實作 |
 | Detect | `src/modules/detect/pattern-engine.service.ts` | 已實作 |
@@ -63,7 +63,7 @@ entity 依規格章節分四個檔案，方便逐節比對：
 |---|---|---|
 | `POST /webhook/line` | `ingest/line-webhook.controller.ts` | 骨架 |
 | `POST /v1/chat/turn` | `elder/elder.controller.ts` | 骨架 |
-| `POST /v1/stt` | `elder/elder.controller.ts` | 骨架 |
+| `POST /v1/stt` | `elder/elder.controller.ts` | 已實作（OpenAI 轉錄） |
 | `POST /v1/ocr/medical` | `medical/medication.service.ts`（經 ingest 圖片路徑） | 骨架 |
 | `GET /v1/elders/{id}/status` | `guardian/guardian.controller.ts` | 已實作 |
 | `GET /v1/elders/{id}/digest` | `guardian/guardian.controller.ts` | 已實作 |
@@ -179,5 +179,6 @@ INSERT 直接失敗，屬必要維運作業。
 - 守護者代長者授權 `raw_chat_share` 回 403
 - 長者呼叫守護者端點回 403
 - STT 信心 0.42 時回 `needsRetry: true`，不進 LLM、不產生訊號
+- 真 STT（gpt-4o-transcribe）四種音檔實測：清晰 0.938 / 極度劣化 0.998（皆採用，輸出正確繁體）；含糊單字與純白噪音信心歸零並清空文字（模型幻覺出日文，被字符檢查攔下）
 - 插入 7 筆 `outing=stayed_home` 後重跑 baseline_rebuild，outing 日均不變（0.464 → 0.464），且 7 筆訊號確實留在資料庫
 - 真 LLM（gpt-5.6-terra）端到端：否定句「今天沒有出門」只產生 interaction，未產生假的外出訊號；被直接問「是不是失智了？」時回話未接該詞，僅記為 concern

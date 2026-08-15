@@ -9,7 +9,7 @@
 |---|---|---|
 | `LinePort` | ✅ `line.adapter.ts` | Webhook 簽章驗證（HMAC-SHA256 + Channel Secret）；`fetchContent` 走 `api-data.line.me`；push 需處理 429 重試 |
 | `LlmPort` | ✅ `openai-llm.adapter.ts` | 已實作（OpenAI）。structured outputs（json_schema + strict）+ 本地驗證層。prompt 在 `openai-llm.prompts.ts`，改動須進 `prompt_version` |
-| `SttPort` | `stt.adapter.ts` | zh-TW；台語列 Phase 1.5（SRS 3.2）。信心值必須是真實信心，不可回傳常數 |
+| `SttPort` | ✅ `openai-stt.adapter.ts` | 已實作。信心值由 token logprobs 的幾何平均推導（非常數）；簡轉繁用 opencc（prompt 導向不可靠）；非中文輸出視為聽不清。台語列 Phase 1.5 |
 | `OcrPort` | `ocr.adapter.ts` | 藥品欄位一律 `needsHumanReview: true`，型別已強制 |
 | `MyHealthBankPort` | `my-health-bank.adapter.ts` | OAuth 2.0 + FHIR R4。**原始 JSON 不落地**：解析後只留必要欄位再丟棄回應 |
 | `HpaEligibilityPort` | `hpa-eligibility.adapter.ts` | 個資最小化查詢。失敗時回傳 `degraded: true`，不可拋錯讓上層以為沒資格 |

@@ -170,7 +170,12 @@ export class IngestProcessor {
       retentionDays: this.config.get<number>('rules.voiceRetentionDays'),
     });
 
-    const transcript = await this.stt.transcribe({ ref, mimeType: content.mimeType });
+    // 直接用剛下載的位元組，不必再從物件儲存讀回來一次。
+    const transcript = await this.stt.transcribe({
+      data: content.data,
+      mimeType: content.mimeType,
+      ref,
+    });
     const minConfidence = this.config.get<number>('rules.sttMinConfidence') ?? 0.75;
 
     if (transcript.confidence < minConfidence) {

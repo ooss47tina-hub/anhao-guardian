@@ -15,6 +15,7 @@ import { KmsCryptoAdapter } from './crypto/kms-crypto.adapter';
 import { LocalCryptoAdapter } from './crypto/local-crypto.adapter';
 import { LineAdapter } from './real/line.adapter';
 import { OpenAiLlmAdapter } from './real/openai-llm.adapter';
+import { OpenAiSttAdapter } from './real/openai-stt.adapter';
 import { FakeLineAdapter } from './fake/fake-line.adapter';
 import { FakeLlmAdapter } from './fake/fake-llm.adapter';
 import { FakeOcrAdapter } from './fake/fake-ocr.adapter';
@@ -70,7 +71,7 @@ const providers: Provider[] = [
     provide: STT_PORT,
     inject: [ConfigService, FakeSttAdapter],
     useFactory: (config: ConfigService, fake: FakeSttAdapter) =>
-      config.get<string>('stt.provider') === 'real' ? notImplemented('SttPort', 'stt.adapter.ts') : fake,
+      config.get<string>('stt.provider') === 'real' ? new OpenAiSttAdapter(config) : fake,
   },
   {
     provide: OCR_PORT,

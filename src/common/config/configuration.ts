@@ -55,7 +55,13 @@ export const configuration = () => ({
     /** 相容 OpenAI API 的自架或代理端點；留空走官方。 */
     baseUrl: process.env.LLM_BASE_URL ?? '',
   },
-  stt: { provider: provider(process.env.STT_PROVIDER) },
+  stt: {
+    /** 有 STT_API_KEY 或共用 LLM_API_KEY 就走真串接。 */
+    provider: provider(process.env.STT_API_KEY || process.env.LLM_API_KEY ? 'real' : undefined),
+    apiKey: process.env.STT_API_KEY || process.env.LLM_API_KEY || '',
+    model: process.env.STT_MODEL ?? '',
+    baseUrl: process.env.STT_BASE_URL || process.env.LLM_BASE_URL || '',
+  },
   ocr: { provider: provider(process.env.OCR_PROVIDER) },
 
   myHealthBank: {
